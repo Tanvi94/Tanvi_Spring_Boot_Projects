@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.lang.reflect.Type;
 import java.util.List;
 
 @Repository
@@ -34,8 +35,44 @@ public class StudentDAOImpl implements StudentDAO{
     @Override
     public List<Student> findAll() {
         //create query
-        TypedQuery<Student> theQuery = entityManager.createQuery("FROM Student ORDER BY lastName DESC", Student.class);
+        TypedQuery<Student> theQuery = entityManager.createQuery("FROM Student", Student.class);
         //return query results
         return theQuery.getResultList();
+    }
+
+    @Override
+    public List<Student> findByLastName(String theLastName) {
+        //create query
+        //here lastName is the entity from StudentDAO not from database
+        TypedQuery<Student> theQuery = entityManager.createQuery("FROM Student WHERE lastName=:theData", Student.class);
+
+        //set query parameters
+        theQuery.setParameter("theData",theLastName);
+
+        //return results
+        return theQuery.getResultList();
+    }
+
+    @Override
+    @Transactional
+    public void update(Student theStudent) {
+        entityManager.merge(theStudent);
+
+    }
+
+    @Override
+    @Transactional
+    public void delete(Integer id) {
+        //find the student
+        Student theStudent = entityManager.find(Student.class,id);
+        //remove it from DB
+        entityManager.remove(theStudent);
+    }
+
+    @Override
+    @Transactional
+    public int deleteAll() {
+        int numRows = entityManager.createQuery("DELETE from Student").executeUpdate();
+        return numRows;
     }
 }
